@@ -16,7 +16,7 @@ class SaloonMockHandler
     public function __invoke(callable $handler)
     {
         return function (RequestInterface $request, array $options) use ($handler) {
-            ray('Process request...', $this->request);
+            dd($this->request);
 
             // dd('Within mock handler...', $this->request);
 

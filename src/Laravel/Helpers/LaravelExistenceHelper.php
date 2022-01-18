@@ -11,6 +11,6 @@ class LaravelExistenceHelper
      */
     public static function check(): bool
     {
-        return function_exists('app') && method_exists(app(), 'version') && is_string(app()->version()) && (int)app()->version() >= 8;
+        return function_exists('app') && app() instanceof \Illuminate\Contracts\Foundation\Application;
     }
 }
