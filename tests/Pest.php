@@ -11,7 +11,9 @@
 |
 */
 
-// uses(Tests\TestCase::class)->in('Feature');
+use Sammyjo20\Saloon\Tests\LaravelTestCase;
+
+uses(LaravelTestCase::class)->in('Laravel');
 
 /*
 |--------------------------------------------------------------------------
