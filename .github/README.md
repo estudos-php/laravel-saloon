@@ -1,16 +1,18 @@
+![1752](https://user-images.githubusercontent.com/29132017/149842636-e9964b27-7ace-4af9-a6db-23c325505295.jpg)
+
 <div align="center">
 
-# Saloon 🚪🚪
-
-![Build Status](https://github.com/sammyjo20/saloon/actions/workflows/tests.yml/badge.svg)
+# 🚪 Saloon 🚪
 
 *A Laravel & PHP package that allows you to write your API integrations in a beautiful, standardised syntax.*
+    
+![Build Status](https://github.com/sammyjo20/saloon/actions/workflows/tests.yml/badge.svg)
     
 </div>
 
 ## Introduction
 
-Saloon is a PHP package which introduces a class-based/OOP approach to building connections to APIs. Saloon introduces an easy to understand pattern to help you standardise the way you interact with third-party APIs, reduce repeated code (DRY) and lets you mock API requests for your tests. It has a great package for Laravel for a tight integration with the fantastic ecosystem.
+Saloon is a PHP package which introduces a class-based/OOP approach to building connections to APIs. Saloon introduces an easy to understand pattern to help you standardise the way you interact with third-party APIs, reduce repeated code (DRY) and lets you mock API requests for your tests. It's perfect for writing your next SDK, or implementing directly into an existing project to work with your APIs. It has a great package for Laravel for a tight integration with the fantastic ecosystem.
 
 ```php
 <?php
@@ -24,16 +26,14 @@ $data = $response->json();
 ```
 
 ## Features
-- Simple and elegant syntax
-- Standardises the way you interact with APIs
-- Conforms to the PSR-7 standard
+- Simple syntax, standardises the way you interact with APIs
 - You don't have to worry about Guzzle/Http Facade/cURL
-- Lets you organise all your API integrations in one place
+- Organise all your API integrations in one place
 - Easily add on your own functionality with plugins
+- Powerful interceptor logic to customise the response
+- Supports Guzzle Handlers for unlimited customisation
+- Mocking requests for testing [(Coming Soon)](https://github.com/Sammyjo20/Saloon/issues/5)
 - Framework agnostic
-- Mocking requests for testing. (work in progress)
-
-> Note on mocking/faking: I'm currently looking for some help with mocking requests in Saloon. If you have any suggestions to make this better, please consider contributing to the issue on the issues page.
 
 ## Getting Started
 ### Using Laravel?
@@ -421,6 +421,12 @@ $request = new CreateForgeSiteRequest($serverId, $domain);
 
 $request->addData('key', 'value');
 
+// Merge in your own data to the existing data array
+
+$request->mergeData([
+    'database' => 'test123'
+]);
+
 // Overwrite the request data entirely.
 
 $request->setData([
@@ -499,6 +505,12 @@ $request = new GetForgeSerersRequest();
 
 $request->addQuery('key', 'value');
 
+// Merge in your own query parameters to the existing array
+
+$request->mergeQuery([
+    'include' => 'user'
+]);
+
 // Overwrite the query parameters entirely.
 
 $request->setQuery([
@@ -506,15 +518,66 @@ $request->setQuery([
 ]);
 ```
 
-## Other Plugins Available
+### Other Plugins Available
 -   AcceptsJson
 -   HasTimeout
 -   WithDebugData
 -   DisablesSSLVerification (Please be careful with this)
 
-## Write your own plugins
+### Write your own plugins
 
-Feel free to write your own plugins, just make sure to include a "boot" method inside of the plugin. The format is: `boot{YOUR CLASS NAME}feature`. For example if I had a class called WithAWSHeader your boot method would be called `bootWithAWSHeaderFeature`.
+Feel free to write your own plugins, just make sure to include a "boot" method inside of the plugin. The format is: `boot{YOUR CLASS NAME}Feature`. For example if I had a class called WithAWSHeader your boot method would be called `bootWithAWSHeaderFeature`.
+
+## Advanced
+
+### Interceptors
+Saloon already allows you to add functionality to your requests in the form of plugins, but if you would like to intercept the response before it is passed
+back to you, you can add a response interceptor. These can be added in the `boot` method of your plugin, or they can be added to the generic `boot` method 
+on the Connector/Request.
+
+Let's have a look at an interceptor that will automatically throw if the response returns an unsuccessful error.
+
+```php
+class CreateForgeServerRequest extends SaloonRequest
+{
+    //...
+
+    public function boot(): void
+    {
+        $this->addResponseInterceptor(function (SaloonRequest $request, SaloonResponse $response) {
+            $response->throw();
+    
+            return $response;
+        });
+    }
+}
+```
+> You can have as many response interceptors as you like.
+
+### Guzzle Handlers
+
+If you need to modify the underlying Guzzle request/response right before its sent, you can use handlers. These are an incredibly useful feature in Guzzle to add functionality to request/responses. To add a handler, simply use the `addHandler` method in your plugin or `boot` method on your connector/request.
+
+[Learn more about Guzzle handlers](https://docs.guzzlephp.org/en/stable/handlers-and-middleware.html)
+
+```php
+class CreateForgeServerRequest extends SaloonRequest
+{
+    //...
+
+    public function boot(): void
+    {
+        $this->addHandler('myCustomHandler', function (callable $handler) {
+            return function (RequestInterface $request, array $options) use ($handler) {
+                $request->withHeader('X-Custom-Header', 'Hello');
+                
+                return $handler($request, $options);             
+            };
+        });
+    }
+}
+```
+> Saloon will not know about the changes you make to your request/responses in handlers.
 
 ## And that's it! ✨
 
@@ -522,3 +585,5 @@ I really hope this package has been useful to you, if you like my work and want 
 
 [Donate Java (the drink not the language)](https://ko-fi.com/sammyjo20)
 
+## Banner Image Credit
+- Freepik.com
