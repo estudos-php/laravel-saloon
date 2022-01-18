@@ -16,16 +16,18 @@ class SaloonMockManager
      *
      * @var array
      */
-    protected array $responseQueue = [];
+    protected array $queuedRequests = [];
 
     /**
      * Tell the Saloon Mock Manager to start mocking
      *
      * @return $this
      */
-    public function startMocking(): self
+    public function startMocking(array $requests): self
     {
         $this->isActive = true;
+
+        $this->recordRequests($requests);
 
         return $this;
     }
@@ -38,6 +40,61 @@ class SaloonMockManager
     public function isMocking(): bool
     {
         return $this->isActive;
+    }
+
+    /**
+     * Record the incoming requests
+     *
+     * @param array $requests
+     * @return $this
+     */
+    private function recordRequests(array $requests): self
+    {
+        // Todo: Add better logic here...
+
+        $this->queuedRequests = $requests;
+
+        return $this;
+    }
+
+    /**
+     * Get all the queued requests
+     *
+     * @return array
+     */
+    public function getQueuedRequests(): array
+    {
+        return $this->queuedRequests;
+    }
+
+    /**
+     * Check if Saloon doesnt have any queued requests.
+     *
+     * @return bool
+     */
+    public function doesntHaveQueuedRequests(): bool
+    {
+        return empty($this->queuedRequests);
+    }
+
+    /**
+     * Check if there are queued requests.
+     *
+     * @return bool
+     */
+    public function hasQueuedRequests(): bool
+    {
+        return ! $this->doesntHaveQueuedRequests();
+    }
+
+    /**
+     * Grab the next request and also delete it from the queue.
+     *
+     * @return bool
+     */
+    public function pullNextRequest(): mixed // Todo: Return type
+    {
+        return array_shift($this->queuedRequests);
     }
 
     /**

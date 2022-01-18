@@ -11,8 +11,8 @@ class Saloon
      *
      * @return void
      */
-    public static function fake(array|null $requests = [])
+    public static function fake(array $requests = [])
     {
-        SaloonMockManager::resolve()->startMocking();
+        SaloonMockManager::resolve()->startMocking($requests);
     }
 }

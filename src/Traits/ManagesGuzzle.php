@@ -6,9 +6,11 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Client as GuzzleClient;
+use Sammyjo20\Saloon\Exceptions\NoMockedRequestsFoundException;
 use Sammyjo20\Saloon\Exceptions\SaloonInvalidHandlerException;
 use Sammyjo20\Saloon\Exceptions\SaloonDuplicateHandlerException;
 use Sammyjo20\Saloon\Laravel\Helpers\LaravelExistenceHelper;
+use Sammyjo20\Saloon\Laravel\Http\Handlers\SaloonMockHandler;
 use Sammyjo20\Saloon\Laravel\Managers\SaloonMockManager;
 
 trait ManagesGuzzle
@@ -99,14 +101,35 @@ trait ManagesGuzzle
         return $handlerStack;
     }
 
+    /**
+     * Boot up the mocking handler if Saloon is being used in Laravel, and if
+     * mocking is enabled.
+     *
+     * @param HandlerStack $handlerStack
+     * @return HandlerStack
+     * @throws NoMockedRequestsFoundException
+     */
     private function bootMockingHandler(HandlerStack $handlerStack): HandlerStack
     {
         if (LaravelExistenceHelper::check() === false) {
             return $handlerStack;
         }
 
-        $isMocking = SaloonMockManager::resolve()->isMocking();
+        $mockManager = SaloonMockManager::resolve();
+        $isMocking = $mockManager->isMocking();
 
-        dd('Are we mocking?', $isMocking);
+        if ($isMocking === false) {
+            return $handlerStack;
+        }
+
+        if ($mockManager->doesntHaveQueuedRequests()) {
+            throw new NoMockedRequestsFoundException;
+        }
+
+        // Todo: Use wildcard requests AND sequence requests.
+
+        $handlerStack->push(new SaloonMockHandler($mockManager->pullNextRequest()), 'saloonMockHandler');
+
+        return $handlerStack;
     }
 }
